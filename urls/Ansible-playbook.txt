@@ -1,0 +1,144 @@
+__--Ansible--__
+Step 1: Create hosts inventory file
+You need to tell Ansible which hosts you are going to use:
+$ cat my_ssh_hosts
+
+Sample outputs:
+
+server1.cyberciti.biz
+server2.cyberciti.biz
+server3.cyberciti.biz
+Step 2: Create playbook
+Create a file called upload_ssh_keys.yml as follows:
+
+---
+- hosts: all
+  remote_user: vivek
+  tasks:
+          # upload ssh key                
+          - authorized_key:
+                  user: vivek
+                  state: present
+                  manage_dir: yes
+                  key: "{{ lookup('file', '/path/to/your/www_id_rsa.pub') }}"
+# vim:ft=ansible:
+The above will place public key file (/path/to/your/www_id_rsa.pub) to all server listed my_ssh_hosts file. Make sure you setup ssh keys for root account.
+
+Step 3: Run playbook
+The syntax is:
+$ ansible-playbook -i my_ssh_hosts upload_ssh_keys.yml
+
+Another example
+In this example, a new user named vivek is created. Next ssh key added for user vivek and ssh server configured to drop password based login using ssh-setup.j2 template.
+
+File: ssh-setup.yml
+---
+- hosts: cluster
+  tasks:
+          # create users for us
+          # note user vivek added to sudo group 
+          # on many system you may need to use wheel 
+          # user in sudo or wheel group can sudo
+          - user:
+                  name: vivek
+                  comment: "Vivek Gite"
+                  shell: /bin/bash
+                  groups: sudo
+                  append: yes
+                  generate_ssh_key: yes
+                  ## run command 'mkpasswd --method=sha-512' to create your own encrypted password ##
+                  password: $6$gF1EHgeUSSwDT3$xgw22QBdZfNe3OUjJkwXZOlEsL645TpacwiYwTwlUyah03.Zh1aUTTfh7iC7Uu5WfmHBkv5fxdbJ2OkzMAPkm/
+                  ssh_key_type: ed25519
+          # upload ssh key                
+          - authorized_key:
+                  user: vivek
+                  state: present
+                  manage_dir: yes
+                  key: "{{ lookup('file', '/home/vivek/.ssh/id_ed25519.pub') }}"
+          # configure ssh server
+          - template:
+                  src: ssh-setup.j2
+                  dest: /etc/ssh/sshd_config
+                  owner: root
+                  mode: '0600'
+                  validate: /usr/sbin/sshd -t -f %s
+                  backup: yes
+          # restart sshd
+          - service:
+                  name: sshd
+                  state: restarted
+File: ssh-setup.j2
+The following will disable root login and password login. Only user named vivek may be login over ssh using public key (you need to issue sudo -i command to gain root shell):
+
+Port 22
+Protocol 2
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_dsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+UsePrivilegeSeparation sandbox
+KeyRegenerationInterval 3600
+ServerKeyBits 1024
+SyslogFacility AUTH
+LogLevel INFO
+LoginGraceTime 120
+PermitRootLogin {{ sshd_permitroot_login }}
+StrictModes yes
+RSAAuthentication yes
+PubkeyAuthentication yes
+LogLevel VERBOSE
+IgnoreRhosts yes
+RhostsRSAAuthentication no
+HostbasedAuthentication no
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+X11Forwarding yes
+X11DisplayOffset 10
+PrintMotd no
+PrintLastLog yes
+TCPKeepAlive yes
+AcceptEnv LANG LC_*
+Subsystem sftp /usr/lib/openssh/sftp-server
+UsePAM {{ sshd_use_pam }}
+PasswordAuthentication {{ sshd_password_authentication }}
+ChallengeResponseAuthentication {{ sshd_challenge_response_authentication }}
+{% for nip in ansible_all_ipv4_addresses  %}
+ListenAddress {{ nip }}
+{% endfor %}
+File: my-inventory.hosts
+[all:vars]
+ansible_user=root
+ansible_port=22
+ 
+[cluster:vars]
+sshd_use_pam=no
+sshd_password_authentication=no
+sshd_challenge_response_authentication=no
+sshd_permitroot_login=no
+ 
+[cluster]
+server1.cyberciti.biz
+server2.cyberciti.biz
+server3.cyberciti.biz
+You run it as follows:
+$ ansible-playbook -i my-inventory.hosts ssh-setup.yml
+
+You can also use loops as follows to upload file for each user:
+
+- hosts: all
+  user: root
+# ....
+  
+my_ssh_users:
+  - name: vivek
+    key: "{{ lookup('file', 'vivek.pub') }}"
+  - name: tom
+    key: "{{ lookup('file', 'tom.pub') }}"
+  - name: wendy
+    key: "{{ lookup('file', 'wendy.pub') }}"
+  - name: jerry
+    key: "{{ lookup('file', 'jerry.pub') }}"
+# ...
+- name: Add ssh pub keys
+  authorized_key: user={{ item.name }} key="{{ item.key }}"
+  with_items: my_ssh_users

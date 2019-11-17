@@ -1,0 +1,26 @@
+https://convertmyfile-home.org/?guid=d9492f5d-bf44-6199-1358-8b9e72bb3f23&extId=hipbphnoanghafmggkdhacpciolpcgjg&EType=c
+
+https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.0.0.1744-linux.zip
+
+Jenkins intallation For linux(Ubuntu) --    https://www.digitalocean.com/community/tutorials/how-to-install-jenkins-on-ubuntu-16-04
+
+
+{Linux Flavour}
+Create without ppk file Instead of pem.file https://mobaxterm.mobatek.net/download-home-edition.html
+
+
+https://labs.play-with-Docker.com
+
+https://www.howtoforge.com/tutorial/ubuntu-jenkins-master-slave/
+
+Nexus -- https://help.sonatype.com/repomanager3/installation/run-as-a-service
+
+Aws(Vpc) -- https://comtechies.com/how-to-create-aws-vpc-with-private-public-subnet-and-micro-nat-instance.html
+
+Docker Installation -- https://linoxide.com/linux-how-to/use-docker-without-sudo-ubuntu/
+
+DockerFile -- https://takacsmark.com/dockerfile-tutorial-by-example-dockerfile-best-practices-2018/
+
+Docker Compose.yml(word press) -- http://13.235.19.234:8080/wp-admin/customize.php?theme=twentyseventeen&return=http%3A%2F%2F13.235.19.234%3A8080%2Fwp-admin%2Fthemes.php
+
+Indstall Dockerswarm -- https://www.dataquest.io/blog/install-and-configure-docker-swarm-on-ubuntu/
